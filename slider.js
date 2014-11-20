@@ -62,7 +62,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			animateTime:500,//滚动图片间的动画时间   单位毫秒
 			scrollType:"ease",//滚动动画的运动走向
 			oneByOne:true,//是否需要 一张一张的滚动  true为需要  false为不需要
-			direction:"left",//向左还是向右滚动  left为向左，right为向右
+			direction:"left",//自动滚动是往什么方向，向左还是向右滚动  left为向左，right为向右			
 			vScroll:false,//竖向 需要扩展
 			hScroll:true,//横向  需要扩展
 			useTransform:false,
@@ -71,7 +71,9 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			onSliderStart:function(){			
 				console.log("onSliderStart");
 			},//开始滚动要执行的操作
-			onSliderMove:function(){console.log("onSliderMove");},//滚当中要执行的操作，
+			onSliderMove:function(){
+				//console.log("onSliderMove");
+			},//滚当中要执行的操作，
 			onSliderEnd:function(){console.log("onSliderEnd");},//滚完要执行的操作			
 			isMouseDown:false//鼠标是否按下
 		};
@@ -80,6 +82,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 		}
 		var that=this;
 		that.index=0;//当前滚动索引
+		that.scrollDirect="left";//当前动画的滚动方向
 		that.slider=document.getElementById(that.options.id);
 		that.options.useTransform = hasTransform && that.options.useTransform;
 		//that.options.hScrollbar = that.options.hScroll && that.options.hScrollbar;
@@ -168,12 +171,18 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			var browserWidth=that.browserWidth;
 			var speed=browserWidth;
 			var totalWidth=parseFloat(slider.style.width);
+			var left=0;
+			//if(that.options.direction=="right"){
+			//	left=-totalWidth/2;
+			//	that.slider.style[transitionDuration] = '0';
+			//	slider.style.marginLeft=left+"px";
+		//	}
 			//var speed=browserWidth/500;
 			var timeSpan=500;
 			var intervalId=0;
 			//slider.style.marginLeft=-browserWidth+"px";			
 			intervalId=that.intervalId=setInterval(function(){
-				var left=parseFloat(slider.style.marginLeft);
+				left=parseFloat(slider.style.marginLeft);
 				//var left=parseFloat(that.index*browserWidth);
 				if(isNaN(left)){
 					left=0;
@@ -181,14 +190,19 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 				if(that.options.debug){
 					console.log("当前滚动方向为"+that.options.direction);
 				}
+				/*if(that.scrollDirect=="left"){
+					browserWidth=browserWidth;
+				}else{
+					browserWidth=-browserWidth;
+				}*/
 				switch(that.options.direction){
 					case "right":
-						if(left<=0){
-							left=totalWidth/2;
-							that.slider.style[transitionDuration] = '0';
-							slider.style.marginLeft=-left+"px";
-						}
-						left-=browserWidth;						
+						//if(left<=0){
+						//	left=-totalWidth/2;
+						//	that.slider.style[transitionDuration] = '0';
+					//		slider.style.marginLeft=left+"px";
+						//}
+						left+=browserWidth;	
 						break;
 					case "left":
 					
@@ -198,7 +212,14 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 					//	console.log("当前滚动索引位置为"+that.index);
 					//}
 				}
-				left=Math.round(left/browserWidth)*browserWidth;
+				if(that.scrollDirect=="left"){
+					left=Math.ceil(left/browserWidth)*browserWidth;
+				}else{
+					left=Math.floor(left/browserWidth)*browserWidth;
+				}
+				if(that.options.debug){
+					console.log("当前滚动方向为"+that.scrollDirect+",当前所滑动位置为:"+left);
+				}
 				that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
 				if(left<=-totalWidth/2){
 					
@@ -207,11 +228,11 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 					//left=-browserWidth;					
 				}else if(left>=0){
 					that.slider.style[transitionDuration] = '0';
-					left=totalWidth/2;
+					left=-totalWidth/2;
 				}else{
 					that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
 				}
-				that.index++;
+				that.index=Math.abs(left/browserWidth);
 				//if(that.index>=that.length-1){
 				//	that.index=0;
 				//}
@@ -220,15 +241,28 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 					console.log("当前滚动索引位置为"+that.index+"当前移动位置为："+left);
 				}
 				slider.style.marginLeft=left+"px";
-				if(left<=-totalWidth/2){				
-					setTimeout(function(){
-						that.slider.style[transitionDuration] = '0';
-						left=-0;
-						slider.style.marginLeft=left+"px"
-					},that.options.animateTime);					
+				if(that.options.direction=="right"){
+					if(left>=0){				
+						setTimeout(function(){
+							that.slider.style[transitionDuration] = '0';
+							left=-totalWidth/2;
+							slider.style.marginLeft=left+"px"
+						},that.options.animateTime);					
+					}				
+				}else{
+					if(left<=-totalWidth/2){				
+						setTimeout(function(){
+							that.slider.style[transitionDuration] = '0';
+							left=0;
+							slider.style.marginLeft=left+"px"
+						},that.options.animateTime);					
+					}				
 				}
 			},that.options.scrollTime);
 			if(!that.options.scroll){//不滚动的时候自动清除定时器
+				if(that.options.debug){
+					console.log("已经有自动清除定时器!");
+				}
 				clearInterval(that.intervalId);
 			}
 		},
@@ -279,6 +313,11 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 				}*/
 				//console.log("1---left="+left+",ex="+eX+",startPos.x="+startPos.x);
 				left=left+(eX-startPos.x);
+				if(eX>startPos.x){//通过鼠标手指触摸位置判断滑动或拖动方向
+					that.scrollDirect="right";					
+				}else{
+					that.scrollDirect="left";
+				}
 				startPos.x=eX;
 					that.slider.style[transitionDuration] = "0";
 				if(left>=0){
