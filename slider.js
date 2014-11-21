@@ -72,18 +72,16 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 				console.log("onSliderStart");
 			},//开始滚动要执行的操作
 			onSliderMove:function(){
-				console.log("onSliderMove");
+				//console.log("onSliderMove");
 			},//滚当中要执行的操作，
-			onSliderEnd:function(){
-				console.log("onSliderEnd");
-			},//滚完要执行的操作			
+			onSliderEnd:function(){console.log("onSliderEnd");},//滚完要执行的操作			
 			isMouseDown:false//鼠标是否按下
 		};
 		for(var i in options){
 			this.options[i]=options[i];
 		}
 		var that=this;
-		that.index=0;//当前滚动索引
+		//that.index=0;//当前滚动索引
 		that.scrollDirect="";//当前动画的滚动方向
 		that.slider=document.getElementById(that.options.id);
 		that.options.useTransform = hasTransform && that.options.useTransform;
@@ -113,7 +111,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 	
 	Slider.prototype={
 		init:function(){
-			var slider=this.slider;
+			var slider=this.slider;			
 			slider.innerHTML+=slider.innerHTML;
 			//var sliderList=this.sliderList=slider.getElementsByTagName("div");
 			//var length=sliderList.length;
@@ -167,99 +165,120 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 		},
 		loadRun:function(){
 			var that=this;
-			//clearInterval(that.intervalId);//重新启动定时器之前，清理定时器
+			clearInterval(that.intervalId);//重新启动定时器之前，清理定时器
 			var slider=that.slider;
 			var sliderList=that.sliderList;
 			var browserWidth=that.browserWidth;
 			var speed=browserWidth;
 			var totalWidth=parseFloat(slider.style.width);
 			var left=0;
-			//if(that.options.direction=="right"){
-			//	left=-totalWidth/2;
-			//	that.slider.style[transitionDuration] = '0';
-			//	slider.style.marginLeft=left+"px";
-		//	}
-			//var speed=browserWidth/500;
+			var direction=that.options.direction;
+			var scrollDirect="right";
 			var timeSpan=500;
 			var intervalId=0;
-			//slider.style.marginLeft=-browserWidth+"px";			
-			intervalId=that.intervalId=setInterval(function(){
+			if(direction=="right"){
 				left=parseFloat(slider.style.marginLeft);
-				//var left=parseFloat(that.index*browserWidth);
 				if(isNaN(left)){
 					left=0;
 				}
-				if(that.options.debug){
-					console.log("当前滚动方向为"+that.options.direction);
-				}
-				/*if(that.scrollDirect=="left"){
-					browserWidth=browserWidth;
-				}else{
-					browserWidth=-browserWidth;
-				}*/
-				switch(that.options.direction){
-					case "right":
-						//if(left<=0){
-						//	left=-totalWidth/2;
-						//	that.slider.style[transitionDuration] = '0';
-					//		slider.style.marginLeft=left+"px";
-						//}
-						left+=browserWidth;	
-						break;
-					case "left":
-					
-					default:
-						left-=browserWidth;
-					//if(that.options.debug){
-					//	console.log("当前滚动索引位置为"+that.index);
-					//}
-				}
-				if(that.scrollDirect=="left"){
-					left=Math.ceil(left/browserWidth)*browserWidth;
-				}else if(that.scrollDirect=="right"){
-					left=Math.floor(left/browserWidth)*browserWidth;
-				}
-				if(that.options.debug){
-					console.log("当前滚动方向为"+that.scrollDirect+",当前所滑动位置为:"+left);
-				}
-				that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
-				if(left<=-totalWidth/2){
-					
-					//that.slider.style[transitionDuration] = '0';
-					
-					//left=-browserWidth;					
-				}else if(left>=0){
+				if(left==0){
 					that.slider.style[transitionDuration] = '0';
 					left=-totalWidth/2;
-				}else{
+					slider.style.marginLeft=left+"px";
+				}
+			}		
+			intervalId=that.intervalId=setInterval(function(){
+				if(direction=="right"){
+					left=parseFloat(slider.style.marginLeft);
+					if(isNaN(left)){
+						left=0;
+					}					
+					if(that.options.debug){
+						console.log("当前滚动方向为"+that.options.direction);
+					}
+					left+=browserWidth;						
+					//if(that.scrollDirect=="left"){
+					//	left=Math.ceil(left/browserWidth)*browserWidth;
+					//}else{
+					//	left=Math.floor(left/browserWidth)*browserWidth;
+					//}
+					if(that.options.debug){
+						console.log("当前滚动方向为"+that.scrollDirect+",当前所滑动位置为:"+left);
+					}
 					that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
-				}
-				that.index=Math.abs(left/browserWidth);
-				//if(that.index>=that.length-1){
-				//	that.index=0;
-				//}
-				//记录当前滚动位置的索引
-				if(that.options.debug){
-					console.log("当前滚动索引位置为"+that.index+"当前移动位置为："+left);
-				}
-				slider.style.marginLeft=left+"px";
-				if(that.options.direction=="right"){
-					if(left>=0){				
+					//if(left>=0){
+						//that.slider.style[transitionDuration] = '0';
+						//left=-totalWidth/2;
+					//}else{
+					that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
+					//}					
+					//if(that.index>=that.length-1){
+					//	that.index=0;
+					//}
+					//记录当前滚动位置的索引
+					if(that.options.debug){
+						console.log("当前滚动索引位置为"+that.getIndex()+",当前移动位置为："+left);
+					}
+					slider.style.marginLeft=left+"px";
+					//that.index=Math.abs(left/browserWidth)-1;
+					if(left>=0){		
 						setTimeout(function(){
 							that.slider.style[transitionDuration] = '0';
 							left=-totalWidth/2;
+							//that.index=0;
 							slider.style.marginLeft=left+"px"
 						},that.options.animateTime);					
 					}				
-				}else{
+				}else if(direction=="left"){
+					left=parseFloat(slider.style.marginLeft);
+					//var left=parseFloat(that.index*browserWidth);
+					if(isNaN(left)){
+						left=0;
+					}
+					if(that.options.debug){
+						console.log("当前滚动方向为"+that.options.direction);
+					}
+				
+					left-=browserWidth;
+					
+					//if(that.scrollDirect=="left"){
+					//	left=Math.ceil(left/browserWidth)*browserWidth;
+					//}else{
+					//	left=Math.floor(left/browserWidth)*browserWidth;
+					//}
+					
+					if(that.options.debug){
+						console.log("当前滚动方向为"+that.scrollDirect+",当前所滑动位置为:"+left);
+					}
+					
+					that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
+					//if(left<=-totalWidth/2){						
+						//that.slider.style[transitionDuration] = '0';						
+						//left=0;					
+					//}else{
+						that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
+					//}					
+					//if(that.index>=that.length-1){
+					//	that.index=0;
+					//}
+					//记录当前滚动位置的索引
+					slider.style.marginLeft=left+"px";
+					//that.index=Math.abs(left/browserWidth);
+					if(that.options.debug){
+						console.log("当前滚动索引位置为"+that.getIndex()+",当前移动位置为："+left);
+					}
 					if(left<=-totalWidth/2){				
 						setTimeout(function(){
 							that.slider.style[transitionDuration] = '0';
 							left=0;
+							//that.index=that.length/2-1;
 							slider.style.marginLeft=left+"px"
 						},that.options.animateTime);					
 					}				
+				
 				}
+				
+				
 			},that.options.scrollTime);
 			if(!that.options.scroll){//不滚动的时候自动清除定时器
 				if(that.options.debug){
@@ -352,6 +371,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			var sliderList=that.sliderList=slider.getElementsByTagName("div");
 			var length=that.length=sliderList.length;
 			var browserWidth=that.browserWidth=document.body.offsetWidth;
+			slider.parentNode.style.width=browserWidth+"px";
 			//slider.width=""
 			for(var i=0;i<length;i++){
 				sliderList[i].style.width=browserWidth+"px";
@@ -400,26 +420,95 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 					}
 				}
 			}
-			that.index=Math.abs(Math.round(left/browserWidth)); //记录当前滚动位置的索引
+			//that.index=Math.abs(Math.ceil(left/browserWidth)); //记录当前滚动位置的索引
 			//that.slider.style[transform] = 'translateX(' + left + 'px)';			
 			slider.style.marginLeft=left+"px";
 			that.loadRun();
-			if (that.options.onSliderEnd){that.options.onSliderEnd.call(that,e)};
 		},_bind: function (type,el,fn,bubble) {
 			(el || this.slider).addEventListener(type, fn, !!bubble);
 		},_unbind: function (type, el, bubble) {
 			(el || this.slider).removeEventListener(type, fn, !!bubble);
 		},next:function(){
+			var that=this;
+			clearInterval(that.intervalId);
+			var slider=that.slider;
+			that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
+			var index=that.getIndex();
+			var length=that.length/2;
+			var totalWidth=parseFloat(slider.style.width);
+			var browserWidth=that.browserWidth;
+			index++;
+			if(index>length-1){
+				that.slider.style[transitionDuration] = '0';
+				index=0;
+			}
+			if(that.options.debug){
+				console.log("next 当前滚动index="+index);
+			}
+			var left=-index*browserWidth;
+			slider.style.marginLeft=left+"px";
+			/*if(left<=-totalWidth/2){				
+				setTimeout(function(){
+					that.slider.style[transitionDuration] = '0';
+					left=0;					
+					slider.style.marginLeft=left+"px"
+				},that.options.animateTime);					
+			}	*/
+			that.loadRun();
+		},prev:function(){
+			var that=this;
+			that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
+			clearInterval(that.intervalId);
+			var slider=that.slider;
+			var index=that.getIndex();
+			var length=that.length/2;
+			var totalWidth=parseFloat(slider.style.width);
+			var browserWidth=that.browserWidth;
+			index--;
+			if(index<0){
+				index=length-1;
+				that.slider.style[transitionDuration] = '0';
+			}
+			if(that.options.debug){
+				console.log("prev 当前滚动index="+index);
+			}
+			var left=-index*browserWidth;
+			slider.style.marginLeft=left+"px";
+			/*if(left>=0){		
+				setTimeout(function(){
+					that.slider.style[transitionDuration] = '0';
+					left=-totalWidth/2;
+					//that.index=0;
+					slider.style.marginLeft=left+"px"
+				},that.options.animateTime);					
+			}*/	
+			that.loadRun();
+		},scrollMount:function(index){
+			var that=this;
+			var slider=that.slider;
+			var totalWidth=parseFloat(slider.style.width);
+			that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
+			clearInterval(that.intervalId);
+			var length=that.length/2;
+			var browserWidth=that.browserWidth;
+			if(index>length-1){
+				index=length-1;
+			}else if(index<0){
+				index=0;
+			}
+			var left=-index*browserWidth;
+			slider.style.marginLeft=left+"px";
+			that.loadRun();
+		},getIndex:function(){
+			var that=this;
+			var slider=that.slider;
+			var browserWidth=that.browserWidth;
+			var left=parseFloat(slider.style.marginLeft);
+			if(isNaN(left)){
+				left=0;
+			}
+			return Math.abs(Math.round(left/browserWidth));
 		}
 	};
-	
-	
-	function stopPropagation(e){
-		if (e.stopPropagation){ //支持W3C标准
-			e.stopPropagation();
-		}else{ //IE8及以下浏览器
-			e.cancelBubble = true;
-		}
-	}
 	module.exports  = Slider;
 });
