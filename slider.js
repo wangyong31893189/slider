@@ -74,8 +74,8 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			onSliderMove:function(){
 				//console.log("onSliderMove");
 			},//滚当中要执行的操作，
-			onSliderEnd:function(){console.log("onSliderEnd");},//滚完要执行的操作			
-			isMouseDown:false//鼠标是否按下
+			onSliderEnd:function(){console.log("onSliderEnd");}//滚完要执行的操作			
+			//isMouseDown:false//鼠标是否按下
 		};
 		for(var i in options){
 			this.options[i]=options[i];
