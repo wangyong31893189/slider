@@ -38,7 +38,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			START_EV = hasTouch ? 'touchstart' : 'mousedown',
 			MOVE_EV = hasTouch ? 'touchmove' : 'mousemove',
 			END_EV = hasTouch ? 'touchend' : 'mouseup',
-			CANCEL_EV = hasTouch ? 'touchcancel' : 'mouseup';
+			CANCEL_EV = hasTouch ? 'touchcancel' : 'touchcancel';
 			TRNEND_EV = (function () {
 				if ( vendor === false ){
 					return false;
@@ -72,9 +72,11 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 				console.log("onSliderStart");
 			},//开始滚动要执行的操作
 			onSliderMove:function(){
-				//console.log("onSliderMove");
+				console.log("onSliderMove");
 			},//滚当中要执行的操作，
-			onSliderEnd:function(){console.log("onSliderEnd");},//滚完要执行的操作			
+			onSliderEnd:function(){
+				console.log("onSliderEnd");
+			},//滚完要执行的操作			
 			isMouseDown:false//鼠标是否按下
 		};
 		for(var i in options){
@@ -82,7 +84,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 		}
 		var that=this;
 		that.index=0;//当前滚动索引
-		that.scrollDirect="left";//当前动画的滚动方向
+		that.scrollDirect="";//当前动画的滚动方向
 		that.slider=document.getElementById(that.options.id);
 		that.options.useTransform = hasTransform && that.options.useTransform;
 		//that.options.hScrollbar = that.options.hScroll && that.options.hScrollbar;
@@ -165,7 +167,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 		},
 		loadRun:function(){
 			var that=this;
-			clearInterval(that.intervalId);//重新启动定时器之前，清理定时器
+			//clearInterval(that.intervalId);//重新启动定时器之前，清理定时器
 			var slider=that.slider;
 			var sliderList=that.sliderList;
 			var browserWidth=that.browserWidth;
@@ -214,7 +216,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 				}
 				if(that.scrollDirect=="left"){
 					left=Math.ceil(left/browserWidth)*browserWidth;
-				}else{
+				}else if(that.scrollDirect=="right"){
 					left=Math.floor(left/browserWidth)*browserWidth;
 				}
 				if(that.options.debug){
@@ -402,6 +404,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			//that.slider.style[transform] = 'translateX(' + left + 'px)';			
 			slider.style.marginLeft=left+"px";
 			that.loadRun();
+			if (that.options.onSliderEnd){that.options.onSliderEnd.call(that,e)};
 		},_bind: function (type,el,fn,bubble) {
 			(el || this.slider).addEventListener(type, fn, !!bubble);
 		},_unbind: function (type, el, bubble) {
@@ -409,5 +412,14 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 		},next:function(){
 		}
 	};
+	
+	
+	function stopPropagation(e){
+		if (e.stopPropagation){ //支持W3C标准
+			e.stopPropagation();
+		}else{ //IE8及以下浏览器
+			e.cancelBubble = true;
+		}
+	}
 	module.exports  = Slider;
 });
