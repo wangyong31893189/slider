@@ -62,11 +62,14 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			animateTime:500,//滚动图片间的动画时间   单位毫秒
 			scrollType:"ease",//滚动动画的运动走向
 			oneByOne:true,//是否需要 一张一张的滚动  true为需要  false为不需要
+			//moreStyle:"", //默认为空   格式为："opacity left" 中间以空格隔开
 			direction:"left",//自动滚动是往什么方向，向左还是向右滚动  left为向左，right为向右			
 			vScroll:false,//竖向 需要扩展
 			hScroll:true,//横向  需要扩展
-			useTransform:false,
-			useTransition:true,
+			containerHeight:null,
+			containerWidth:null,
+			//useTransform:false,
+			//useTransition:true,
 			debug:false,//是否开启调试模式   默认为false不开启
 			onSliderStart:function(){			
 				console.log("onSliderStart");
@@ -84,21 +87,29 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 		//that.index=0;//当前滚动索引
 		that.scrollDirect="";//当前动画的滚动方向
 		that.slider=document.getElementById(that.options.id);
-		that.options.useTransform = hasTransform && that.options.useTransform;
+		//that.options.useTransform = hasTransform && that.options.useTransform;
+		var unit=that.unit="width";
+		var moveBy=that.moveBy="marginLeft";
+		var moveStyleBy=that.moveStyleBy="margin-left";
+		if(that.options.vScroll){//竖向滚动		
+			unit=that.unit="height";
+			moveBy=that.moveBy="marginTop";
+			moveStyleBy=that.moveStyleBy="margin-top";
+		}
 		//that.options.hScrollbar = that.options.hScroll && that.options.hScrollbar;
 		//that.options.vScrollbar = that.options.vScroll && that.options.vScrollbar;
 		//that.options.zoom = that.options.useTransform && that.options.zoom;
-		that.options.useTransition = hasTransitionEnd && that.options.useTransition;
+		//that.options.useTransition = hasTransitionEnd && that.options.useTransition;
 		that.sliderType={"ease":"cubic-bezier(0.25, 0.1, 0.25, 1.0)","linear":"cubic-bezier(0.0, 0.0, 1.0, 1.0)","ease-in":"cubic-bezier(0.42, 0, 1.0, 1.0)","ease-out":"cubic-bezier(0, 0, 0.58, 1.0)",  "ease-in-out":"cubic-bezier(0.42, 0, 0.58, 1.0)"};
 		that.sliderFunc=that.sliderType[that.options.scrollType];
-		that.slider.style[transitionProperty] = that.options.useTransform ? cssVendor + 'transform' : 'margin-left left';
+		that.slider.style[transitionProperty] = that.options.useTransform ? cssVendor + 'transform' : moveStyleBy;
 		that.slider.style[transitionDuration] =that.options.animateTime/1000+"s";
 		that.slider.style[transformOrigin] = '0 0';
 		if (that.options.useTransition){
 			that.slider.style[transitionTimingFunction] =that.sliderFunc;		
 		}
 		
-		that.slider.style.cssText += ';margin-left:0px';		
+		that.slider.style.cssText += ';'+moveStyleBy+':0px';		
 		//that.slider.parentNode.style.cssText="overflow:hidden;";
 	}
 	var Pos=function (){
@@ -121,7 +132,9 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			//	sliderList[i].style.width=browserWidth+"px";
 			//}
 			//slider.style.width=browserWidth*length+"px";
-			this.refresh();
+			if(!this.refresh()){
+				return;
+			}
 			//alert(document.body.offsetWidth);			
 			this.loadRun();
 			
@@ -169,27 +182,34 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			var slider=that.slider;
 			var sliderList=that.sliderList;
 			var browserWidth=that.browserWidth;
-			var speed=browserWidth;
-			var totalWidth=parseFloat(slider.style.width);
+			var unit=that.unit;
+			var moveBy=that.moveBy;
+			//var browserHeight=that.browserHeight;
+			//var speed=browserWidth;
+			var totalWidth=parseFloat(slider.style[unit]);			
 			var left=0;
 			var direction=that.options.direction;
 			var scrollDirect="right";
-			var timeSpan=500;
+			//var timeSpan=500;
 			var intervalId=0;
 			if(direction=="right"){
-				left=parseFloat(slider.style.marginLeft);
+				left=parseFloat(slider.style[moveBy]);
+				
 				if(isNaN(left)){
 					left=0;
 				}
 				if(left==0){
 					that.slider.style[transitionDuration] = '0';
 					left=-totalWidth/2;
-					slider.style.marginLeft=left+"px";
+					slider.style[moveBy]=left+"px";
 				}
 			}		
 			intervalId=that.intervalId=setInterval(function(){
+				//滚动开始执行
+				if (that.options.onSliderStart){that.options.onSliderStart.call(that)};
 				if(direction=="right"){
-					left=parseFloat(slider.style.marginLeft);
+					left=parseFloat(slider.style[moveBy]);
+					
 					if(isNaN(left)){
 						left=0;
 					}					
@@ -226,11 +246,11 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 							that.slider.style[transitionDuration] = '0';
 							left=-totalWidth/2;
 							//that.index=0;
-							slider.style.marginLeft=left+"px"
+							slider.style[moveBy]=left+"px"
 						},that.options.animateTime);					
 					}				
 				}else if(direction=="left"){
-					left=parseFloat(slider.style.marginLeft);
+					left=parseFloat(slider.style[moveBy]);
 					//var left=parseFloat(that.index*browserWidth);
 					if(isNaN(left)){
 						left=0;
@@ -262,7 +282,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 					//	that.index=0;
 					//}
 					//记录当前滚动位置的索引
-					slider.style.marginLeft=left+"px";
+					slider.style[moveBy]=left+"px";
 					//that.index=Math.abs(left/browserWidth);
 					if(that.options.debug){
 						console.log("当前滚动索引位置为"+that.getIndex()+",当前移动位置为："+left);
@@ -272,13 +292,13 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 							that.slider.style[transitionDuration] = '0';
 							left=0;
 							//that.index=that.length/2-1;
-							slider.style.marginLeft=left+"px"
+							slider.style[moveBy]=left+"px"
 						},that.options.animateTime);					
 					}				
 				
 				}
-				
-				
+				//滚动结束执行
+				if (that.options.onSliderMove){that.options.onSliderMove.call(that)};
 			},that.options.scrollTime);
 			if(!that.options.scroll){//不滚动的时候自动清除定时器
 				if(that.options.debug){
@@ -316,6 +336,9 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 		},
 		_move:function(e){//
 			var that=this;
+			var unit=that.unit;
+			var moveBy=that.moveBy;
+			var moveStyleBy=that.moveStyleBy;
 			e.preventDefault();			
 			if(that.isMouseDown){
 				if(e.changedTouches){
@@ -324,8 +347,8 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 				var eX=movePos.x=e.clientX || e.pageX;
 				var eY=movePos.y=e.clientY || e.pageY;
 				var slider=that.slider;
-				var totalWidth=parseFloat(slider.style.width);
-				var left=parseFloat(slider.style.marginLeft);
+				var totalWidth=parseFloat(slider.style[unit]);
+				var left=parseFloat(slider.style[moveBy]);
 				if(isNaN(left)){
 					left=0;
 				}
@@ -333,14 +356,24 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 					left=0;
 				}*/
 				//console.log("1---left="+left+",ex="+eX+",startPos.x="+startPos.x);
-				left=left+(eX-startPos.x);
-				if(eX>startPos.x){//通过鼠标手指触摸位置判断滑动或拖动方向
-					that.scrollDirect="right";					
+				if(that.options.hScroll){
+					left=left+(eX-startPos.x);
+					if(eX>startPos.x){//通过鼠标手指触摸位置判断滑动或拖动方向
+						that.scrollDirect="right";					
+					}else{
+						that.scrollDirect="left";
+					}
+					startPos.x=eX;
 				}else{
-					that.scrollDirect="left";
+					left=left+(eY-startPos.y);
+					if(eY>startPos.y){//通过鼠标手指触摸位置判断滑动或拖动方向
+						that.scrollDirect="right";					
+					}else{
+						that.scrollDirect="left";
+					}
+					startPos.y=eY;					
 				}
-				startPos.x=eX;
-					that.slider.style[transitionDuration] = "0";
+				that.slider.style[transitionDuration] = "0";
 				if(left>=0){
 					left=-totalWidth/2;
 				}else if(left<=-totalWidth/2){
@@ -359,7 +392,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 				}
 				console.log("3---left="+left);*/
 				//that.slider.style[transform] = 'translateX(' + left + 'px)';
-				slider.style.marginLeft=left+"px";				
+				slider.style[moveBy]=left+"px";				
 				
 				if (that.options.onSliderMove){that.options.onSliderMove.call(that,e)};
 			}
@@ -368,19 +401,42 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			var that=this;
 			var slider=that.slider;
 			//slider.innerHTML+=slider.innerHTML;
+			var unit=that.unit;
+			var moveBy=that.moveBy;
+			var moveStyleBy=that.moveStyleBy;
 			var sliderList=that.sliderList=slider.getElementsByTagName("div");
 			var length=that.length=sliderList.length;
-			var browserWidth=that.browserWidth=document.body.offsetWidth;
-			slider.parentNode.style.width=browserWidth+"px";
-			//slider.width=""
-			for(var i=0;i<length;i++){
-				sliderList[i].style.width=browserWidth+"px";
+			var browserWidth=0;			
+			if(that.options.hScroll&&!that.options.vScroll){//横向滚动 true 并且竖向滚动为false
+				browserWidth=that.browserWidth=that.options.containerWidth;
+				if(!browserWidth){
+					browserWidth=that.browserWidth=document.body.offsetWidth;			
+				}
+			}else if(!that.options.hScroll&&that.options.vScroll){//横向滚动 false 并且竖向滚动为 true
+				browserWidth=that.browserWidth=that.options.containerHeight;
+				if(!browserWidth){
+					browserWidth=that.browserWidth="160";			
+				}
+			}else{
+				console.error("对不起，滚动方向请重新设置！");
+				slider.style.display="none";
+				return false;
 			}
-			slider.style.width=browserWidth*length+"px";
+			slider.parentNode.style[unit]=browserWidth+"px";
+			
+			//slider.width=""
+			for(var i=0;i<length;i++){				
+				sliderList[i].style[unit]=browserWidth+"px";				
+			}			
+			slider.style[unit]=browserWidth*length+"px";
+			return true;
 		},
 		_end: function (e) {
 			var that=this;
 			e.preventDefault();
+			var unit=that.unit;
+			var moveBy=that.moveBy;
+			var moveStyleBy=that.moveStyleBy;
 			that.isMouseDown=false;
 			if(e.changedTouches){
 				e=e.changedTouches[e.changedTouches.length-1];
@@ -388,12 +444,16 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			var eX=movePos.x=e.clientX || e.pageX;
 			var eY=movePos.y=e.clientY || e.pageY;
 			var slider=that.slider;
-			var totalWidth=parseFloat(slider.style.width);
-			var left=parseFloat(slider.style.marginLeft);
+			var totalWidth=parseFloat(slider.style[unit]);
+			var left=parseFloat(slider.style[moveBy]);
 			if(isNaN(left)){
 				left=0;
 			}
-			var left=left+(eX-startPos.x);
+			if(that.options.hScroll){//横向滚动 true
+				left=left+(eX-startPos.x);
+			}else{
+				left=left+(eY-startPos.y);
+			}
 			that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
 			if(left>=0){
 				left=-totalWidth/2;
@@ -422,7 +482,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			}
 			//that.index=Math.abs(Math.ceil(left/browserWidth)); //记录当前滚动位置的索引
 			//that.slider.style[transform] = 'translateX(' + left + 'px)';			
-			slider.style.marginLeft=left+"px";
+			slider.style[moveBy]=left+"px";
 			that.loadRun();
 		},_bind: function (type,el,fn,bubble) {
 			(el || this.slider).addEventListener(type, fn, !!bubble);
@@ -430,12 +490,15 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			(el || this.slider).removeEventListener(type, fn, !!bubble);
 		},next:function(){
 			var that=this;
+			var unit=that.unit;
+			var moveBy=that.moveBy;
+			var moveStyleBy=that.moveStyleBy;
 			clearInterval(that.intervalId);
 			var slider=that.slider;
 			that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
 			var index=that.getIndex();
 			var length=that.length/2;
-			var totalWidth=parseFloat(slider.style.width);
+			var totalWidth=parseFloat(slider.style[unit]);
 			var browserWidth=that.browserWidth;
 			index++;
 			if(index>length-1){
@@ -446,7 +509,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 				console.log("next 当前滚动index="+index);
 			}
 			var left=-index*browserWidth;
-			slider.style.marginLeft=left+"px";
+			slider.style[moveBy]=left+"px";
 			/*if(left<=-totalWidth/2){				
 				setTimeout(function(){
 					that.slider.style[transitionDuration] = '0';
@@ -457,12 +520,15 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			that.loadRun();
 		},prev:function(){
 			var that=this;
+			var unit=that.unit;
+			var moveBy=that.moveBy;
+			var moveStyleBy=that.moveStyleBy;
 			that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
 			clearInterval(that.intervalId);
 			var slider=that.slider;
 			var index=that.getIndex();
 			var length=that.length/2;
-			var totalWidth=parseFloat(slider.style.width);
+			var totalWidth=parseFloat(slider.style[unit]);
 			var browserWidth=that.browserWidth;
 			index--;
 			if(index<0){
@@ -473,7 +539,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 				console.log("prev 当前滚动index="+index);
 			}
 			var left=-index*browserWidth;
-			slider.style.marginLeft=left+"px";
+			slider.style[moveBy]=left+"px";
 			/*if(left>=0){		
 				setTimeout(function(){
 					that.slider.style[transitionDuration] = '0';
@@ -485,8 +551,11 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			that.loadRun();
 		},scrollMount:function(index){
 			var that=this;
+			var unit=that.unit;
+			var moveBy=that.moveBy;
+			var moveStyleBy=that.moveStyleBy;
 			var slider=that.slider;
-			var totalWidth=parseFloat(slider.style.width);
+			var totalWidth=parseFloat(slider.style[unit]);
 			that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
 			clearInterval(that.intervalId);
 			var length=that.length/2;
@@ -497,17 +566,21 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 				index=0;
 			}
 			var left=-index*browserWidth;
-			slider.style.marginLeft=left+"px";
+			slider.style[moveBy]=left+"px";
 			that.loadRun();
 		},getIndex:function(){
 			var that=this;
+			var unit=that.unit;
+			var moveBy=that.moveBy;
+			var moveStyleBy=that.moveStyleBy;
 			var slider=that.slider;
 			var browserWidth=that.browserWidth;
-			var left=parseFloat(slider.style.marginLeft);
+			var left=parseFloat(slider.style[moveBy]);
 			if(isNaN(left)){
 				left=0;
 			}
-			return Math.abs(Math.round(left/browserWidth));
+			var index=that.index=Math.abs(Math.round(left/browserWidth));
+			return index;
 		}
 	};
 	module.exports  = Slider;
