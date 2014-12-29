@@ -178,6 +178,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			slider.addEventListener(END_EV,function(){
 				that.loadRun();
 			});*/
+			that.timeoutId=0;
 		},
 		loadRun:function(){
 			var that=this;
@@ -548,60 +549,67 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 		},next:function(){
 			var that=this;
 			var unit=that.unit;
-			var sliderList=that.sliderList;
 			var moveBy=that.moveBy;
 			var moveStyleBy=that.moveStyleBy;
-			clearInterval(that.intervalId);
 			var slider=that.slider;
-			that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
+			var sliderList=that.sliderList;
 			var index=that.getIndex();
 			var length=that.length/2;
 			var totalWidth=parseFloat(slider.style[unit]);
 			var browserWidth=that.browserWidth;
+			//清除定时器
+			clearTimeout(that.timeoutId);
+			clearInterval(that.intervalId);
+			var left=-index*browserWidth;
+			if(left-1<=-totalWidth/2){
+				slider.style[transitionDuration] = '0';
+				left=0;			
+				slider.style[moveBy]=left+"px";				
+			}
 			index++;
-			if(index>length-1){
-				that.slider.style[transitionDuration] = '0';
-				index=0;
+			if(index>length){
+				index=1;
 			}
 			if(that.options.debug){
 				console.log("next 当前滚动index="+index);
 			}
-			//var index=that.getIndex()+1;
-				var oImg=sliderList[index].getElementsByTagName("img")[0];
-				if(oImg){
-					var data_src=oImg.getAttribute("data-src");
-					if(data_src){
-						oImg.src=data_src;
-						oImg.removeAttribute("data-src");
-					}
+			var oImg=sliderList[index].getElementsByTagName("img")[0];
+			if(oImg){
+				var data_src=oImg.getAttribute("data-src");
+				if(data_src){
+					oImg.src=data_src;
+					oImg.removeAttribute("data-src");
 				}
-			var left=-index*browserWidth;
-			slider.style[moveBy]=left+"px";
-			/*if(left<=-totalWidth/2){				
-				setTimeout(function(){
-					that.slider.style[transitionDuration] = '0';
-					left=0;					
-					slider.style.marginLeft=left+"px"
-				},that.options.animateTime);					
-			}	*/
+			}			
+			left=-index*browserWidth;
+			that.timeoutId=setTimeout(function(){
+				slider.style[transitionDuration] = that.options.animateTime/1000+"s";
+				slider.style[moveBy]=left+"px";
+			},100);
 			that.loadRun();
 		},prev:function(){
 			var that=this;
 			var unit=that.unit;
 			var moveBy=that.moveBy;
 			var moveStyleBy=that.moveStyleBy;
-			that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
-			clearInterval(that.intervalId);
 			var slider=that.slider;
 			var sliderList=that.sliderList;
 			var index=that.getIndex();
 			var length=that.length/2;
 			var totalWidth=parseFloat(slider.style[unit]);
 			var browserWidth=that.browserWidth;
+			//清除定时器
+			clearTimeout(that.timeoutId);
+			clearInterval(that.intervalId);
+			var left=-index*browserWidth;
+			if(left+1>=0){
+				slider.style[transitionDuration] = '0';
+				left=-totalWidth/2;					
+				slider.style[moveBy]=left+"px";			
+			}
 			index--;
 			if(index<0){
 				index=length-1;
-				that.slider.style[transitionDuration] = '0';
 			}
 			var oImg=sliderList[index].getElementsByTagName("img")[0];
 			if(oImg){
@@ -613,17 +621,12 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			}
 			if(that.options.debug){
 				console.log("prev 当前滚动index="+index);
-			}
-			var left=-index*browserWidth;
-			slider.style[moveBy]=left+"px";
-			/*if(left>=0){		
-				setTimeout(function(){
-					that.slider.style[transitionDuration] = '0';
-					left=-totalWidth/2;
-					//that.index=0;
-					slider.style.marginLeft=left+"px"
-				},that.options.animateTime);					
-			}*/	
+			}		
+			left=-index*browserWidth;
+			that.timeoutId=setTimeout(function(){
+				slider.style[transitionDuration] = that.options.animateTime/1000+"s";
+				slider.style[moveBy]=left+"px";
+			},100);			
 			that.loadRun();
 		},scrollMount:function(index){
 			var that=this;
