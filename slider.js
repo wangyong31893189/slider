@@ -38,7 +38,8 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			START_EV = hasTouch ? 'touchstart' : 'mousedown',
 			MOVE_EV = hasTouch ? 'touchmove' : 'mousemove',
 			END_EV = hasTouch ? 'touchend' : 'mouseup',
-			CANCEL_EV = hasTouch ? 'touchcancel' : 'touchcancel';
+			//OUT_EV=hasTouch?''
+			CANCEL_EV = hasTouch ? 'touchcancel' : 'mouseout';
 			TRNEND_EV = (function () {
 				if ( vendor === false ){
 					return false;
@@ -54,7 +55,16 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 
 				return transitionEnd[vendor];
 			})();
-
+function IsPC()  
+{  
+   var userAgentInfo = navigator.userAgent;  
+   var Agents = new Array("Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod");  
+   var flag = true;  
+   for (var v = 0; v < Agents.length; v++) {  
+       if (userAgentInfo.indexOf(Agents[v]) > 0) { flag = false; break; }  
+   }  
+   return flag;  
+}    
 	var Slider=function(options){
 		this.options={
 			scroll:true,//是否滚动
@@ -110,7 +120,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 		if (that.options.useTransition){
 			that.slider.style[transitionTimingFunction] =that.sliderFunc;		
 		}
-		
+		that.isPc=IsPC();
 		that.slider.style.cssText += ';'+moveStyleBy+':0px';		
 		//that.slider.parentNode.style.cssText="overflow:hidden;";
 	}
@@ -147,6 +157,8 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			that._bind(END_EV,null,function(e){that.handlerEvent(e,that)});//绑定鼠标弹上或触摸停止事件
 			that._bind(CANCEL_EV,null,function(e){
 				clearInterval(that.intervalId);
+				e.preventDefault();
+				that.handlerEvent(e,that);
 			});//绑定鼠标弹上或触摸取消事件
 			that._bind(RESIZE_EV,window,function(e){//绑定窗口放大缩小或设备横竖事件
 				clearInterval(that.intervalId);
@@ -339,7 +351,9 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 		_start:function(e){  //开始事件
 			var that=this;
 			clearInterval(that.intervalId);
-			//e.preventDefault();
+			if(that.isPc){
+				e.preventDefault();				
+			}
 			that.isMoved=false;
 			if(e.changedTouches){
 				e=e.changedTouches[e.changedTouches.length-1];
@@ -355,8 +369,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			var sliderList=that.sliderList;
 			var unit=that.unit;
 			var moveBy=that.moveBy;
-			var moveStyleBy=that.moveStyleBy;
-			e.preventDefault();			
+			var moveStyleBy=that.moveStyleBy;					
 			if(that.isMouseDown){
 				if(e.changedTouches){
 					e=e.changedTouches[e.changedTouches.length-1];
@@ -428,6 +441,8 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 					}					
 				}
 				if (that.options.onSliderMove){that.options.onSliderMove.call(that,e)};
+			}else{
+				e.preventDefault();	
 			}
 		},
 		refresh:function(){
