@@ -64,13 +64,15 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			oneByOne:true,//是否需要 一张一张的滚动  true为需要  false为不需要
 			//moreStyle:"", //默认为空   格式为："opacity left" 中间以空格隔开
 			direction:"left",//自动滚动是往什么方向，向左还是向右滚动  left为向左，right为向右			
-			vScroll:false,//竖向 需要扩展
-			hScroll:true,//横向  需要扩展
+			vScroll:false,//竖向
+			hScroll:true,//横向 
 			containerHeight:null,
 			containerWidth:null,
 			//useTransform:false,
 			//useTransition:true,
 			debug:false,//是否开启调试模式   默认为false不开启
+			scrollSensitivity:0.5,//滑动灵敏度  默认0.5   0-1
+			lazyLoad:true,//默认打开图片懒加载
 			onSliderStart:function(){			
 				console.log("onSliderStart");
 			},//开始滚动要执行的操作
@@ -119,6 +121,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 	var startPos=new Pos();
 	var movePos=new Pos();
 	var endPos=new Pos();
+	var tempStartPos=new Pos();
 	
 	Slider.prototype={
 		init:function(){
@@ -207,6 +210,15 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			intervalId=that.intervalId=setInterval(function(){
 				//滚动开始执行
 				if (that.options.onSliderStart){that.options.onSliderStart.call(that)};
+				var index=that.getIndex()+1;
+				var oImg=sliderList[index].getElementsByTagName("img")[0];
+				if(oImg){
+					var data_src=oImg.getAttribute("data-src");
+					if(data_src){
+						oImg.src=data_src;
+						oImg.removeAttribute("data-src");
+					}
+				}
 				if(direction=="right"){
 					left=parseFloat(slider.style[moveBy]);
 					
@@ -239,7 +251,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 					if(that.options.debug){
 						console.log("当前滚动索引位置为"+that.getIndex()+",当前移动位置为："+left);
 					}
-					slider.style.marginLeft=left+"px";
+					slider.style[moveBy]=left+"px";
 					//that.index=Math.abs(left/browserWidth)-1;
 					if(left>=0){		
 						setTimeout(function(){
@@ -294,8 +306,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 							//that.index=that.length/2-1;
 							slider.style[moveBy]=left+"px"
 						},that.options.animateTime);					
-					}				
-				
+					}
 				}
 				//滚动结束执行
 				if (that.options.onSliderMove){that.options.onSliderMove.call(that)};
@@ -325,17 +336,19 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 		_start:function(e){  //开始事件
 			var that=this;
 			clearInterval(that.intervalId);
-			e.preventDefault();
+			//e.preventDefault();
+			that.isMoved=false;
 			if(e.changedTouches){
 				e=e.changedTouches[e.changedTouches.length-1];
 			}
-			var eX=startPos.x=e.clientX || e.pageX;
-			var eY=startPos.y=e.clientY || e.pageY;			
+			var eX=startPos.x=tempStartPos.x=e.clientX || e.pageX;
+			var eY=startPos.y=tempStartPos.y=e.clientY || e.pageY;			
 			that.isMouseDown=true;
 			if (that.options.onSliderStart){that.options.onSliderStart.call(that,e)};
 		},
 		_move:function(e){//
 			var that=this;
+			that.isMoved=true;
 			var unit=that.unit;
 			var moveBy=that.moveBy;
 			var moveStyleBy=that.moveStyleBy;
@@ -423,7 +436,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 				return false;
 			}
 			slider.parentNode.style[unit]=browserWidth+"px";
-			
+			slider.style[moveBy]=-that.getIndex()*browserWidth+"px";
 			//slider.width=""
 			for(var i=0;i<length;i++){				
 				sliderList[i].style[unit]=browserWidth+"px";				
@@ -433,57 +446,99 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 		},
 		_end: function (e) {
 			var that=this;
-			e.preventDefault();
-			var unit=that.unit;
-			var moveBy=that.moveBy;
-			var moveStyleBy=that.moveStyleBy;
-			that.isMouseDown=false;
-			if(e.changedTouches){
-				e=e.changedTouches[e.changedTouches.length-1];
-			}
-			var eX=movePos.x=e.clientX || e.pageX;
-			var eY=movePos.y=e.clientY || e.pageY;
-			var slider=that.slider;
-			var totalWidth=parseFloat(slider.style[unit]);
-			var left=parseFloat(slider.style[moveBy]);
-			if(isNaN(left)){
-				left=0;
-			}
-			if(that.options.hScroll){//横向滚动 true
-				left=left+(eX-startPos.x);
-			}else{
-				left=left+(eY-startPos.y);
-			}
-			that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
-			if(left>=0){
-				left=-totalWidth/2;
-				that.slider.style[transitionDuration] = "0";
-			}else if(left<=-totalWidth/2){
-				left=0;
-				that.slider.style[transitionDuration] = "0";
-			}else{
-				that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
-			}
-			var browserWidth=that.browserWidth;
-			//console.log("end---left="+left);
-			//console.log("end---(left%browserWidth/parseFloat(browserWidth)="+(left%browserWidth/parseFloat(browserWidth)));
-			if(that.options.oneByOne){
-				if(Math.abs(left%browserWidth/parseFloat(browserWidth))>=0.5){
-					left=Math.floor(left/browserWidth)*browserWidth;
-					if(that.options.debug){
-						console.log("大于");
-					}
+			if(that.isMoved){
+				e.preventDefault();
+			
+				var sliderList=that.sliderList;
+				var unit=that.unit;
+				var moveBy=that.moveBy;
+				var moveStyleBy=that.moveStyleBy;
+				that.isMouseDown=false;
+				if(e.changedTouches){
+					e=e.changedTouches[e.changedTouches.length-1];
+				}
+				var eX=endPos.x=e.clientX || e.pageX;
+				var eY=endPos.y=e.clientY || e.pageY;
+				var slider=that.slider;
+				var totalWidth=parseFloat(slider.style[unit]);
+				var left=parseFloat(slider.style[moveBy]);
+				if(isNaN(left)){
+					left=0;
+				}
+				var _direction=0;  //大于等于0向左   小于0为向右
+				if(that.options.hScroll){//横向滚动 true
+					left=left+(eX-tempStartPos.x);
+					_direction=eX-tempStartPos.x;
 				}else{
-					left=Math.ceil(left/browserWidth)*browserWidth;
+					left=left+(eY-tempStartPos.y);
+					_direction=eY-tempStartPos.y;
+				}
+				that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
+				if(left>=0){
+					left=-totalWidth/2;
+					that.slider.style[transitionDuration] = "0";
+				}else if(left<=-totalWidth/2){
+					left=0;
+					that.slider.style[transitionDuration] = "0";
+				}else{
+					that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
+				}
+				var browserWidth=that.browserWidth;
+				//console.log("end---left="+left);
+				//console.log("end---(left%browserWidth/parseFloat(browserWidth)="+(left%browserWidth/parseFloat(browserWidth)));
+				if(that.options.oneByOne){
+					//if(Math.abs(left%browserWidth/parseFloat(browserWidth))>=0.5){
 					if(that.options.debug){
-						console.log("小于");
+						console.log((Math.abs(_direction/parseFloat(browserWidth))>=that.options.scrollSensitivity)+"当前滚动灵敏度为："+Math.abs(_direction/parseFloat(browserWidth))+"，默认值为："+that.options.scrollSensitivity+",_direction="+_direction);
+					}
+					if(Math.abs(_direction/parseFloat(browserWidth))>=that.options.scrollSensitivity){ //大于等于滑动灵敏度  则滑动一格
+						if(_direction>=0){
+							if(that.options.debug){
+								console.log("当前left大于等于0");
+							}
+							left=Math.ceil(left/browserWidth)*browserWidth;	
+						}else{
+							left=Math.floor(left/browserWidth)*browserWidth;
+							if(that.options.debug){
+								console.log("当前left小于等于0");
+							}						
+						}
+						/*if(that.options.debug){
+							console.log("大于");
+						}*/
+					}else{
+						left=Math.ceil(left/browserWidth)*browserWidth;
+						if(that.options.debug){
+							console.log("小于");
+						}
 					}
 				}
+
+				if(that.options.lazyLoad){
+					var index=0;
+					if(_direction>=0){
+						index=that.getPrevIndex();
+					}else{
+						index=that.getNextIndex();
+					}
+					if(that.options.debug){
+						console.log("当前滚动索引位置为"+index);
+					}
+					var oImg=sliderList[index].getElementsByTagName("img")[0];
+					if(oImg){
+						var data_src=oImg.getAttribute("data-src");
+						if(data_src){
+							oImg.src=data_src;
+							oImg.removeAttribute("data-src");
+						}
+					}					
+				}
+				//that.index=Math.abs(Math.ceil(left/browserWidth)); //记录当前滚动位置的索引
+				//that.slider.style[transform] = 'translateX(' + left + 'px)';			
+				slider.style[moveBy]=left+"px";
+				that.loadRun();
 			}
-			//that.index=Math.abs(Math.ceil(left/browserWidth)); //记录当前滚动位置的索引
-			//that.slider.style[transform] = 'translateX(' + left + 'px)';			
-			slider.style[moveBy]=left+"px";
-			that.loadRun();
+			that.isMouseDown=false;
 		},_bind: function (type,el,fn,bubble) {
 			(el || this.slider).addEventListener(type, fn, !!bubble);
 		},_unbind: function (type, el, bubble) {
@@ -491,6 +546,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 		},next:function(){
 			var that=this;
 			var unit=that.unit;
+			var sliderList=that.sliderList;
 			var moveBy=that.moveBy;
 			var moveStyleBy=that.moveStyleBy;
 			clearInterval(that.intervalId);
@@ -508,6 +564,15 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			if(that.options.debug){
 				console.log("next 当前滚动index="+index);
 			}
+			//var index=that.getIndex()+1;
+				var oImg=sliderList[index].getElementsByTagName("img")[0];
+				if(oImg){
+					var data_src=oImg.getAttribute("data-src");
+					if(data_src){
+						oImg.src=data_src;
+						oImg.removeAttribute("data-src");
+					}
+				}
 			var left=-index*browserWidth;
 			slider.style[moveBy]=left+"px";
 			/*if(left<=-totalWidth/2){				
@@ -526,6 +591,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
 			clearInterval(that.intervalId);
 			var slider=that.slider;
+			var sliderList=that.sliderList;
 			var index=that.getIndex();
 			var length=that.length/2;
 			var totalWidth=parseFloat(slider.style[unit]);
@@ -534,6 +600,14 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			if(index<0){
 				index=length-1;
 				that.slider.style[transitionDuration] = '0';
+			}
+			var oImg=sliderList[index].getElementsByTagName("img")[0];
+			if(oImg){
+				var data_src=oImg.getAttribute("data-src");
+				if(data_src){
+					oImg.src=data_src;
+					oImg.removeAttribute("data-src");
+				}
 			}
 			if(that.options.debug){
 				console.log("prev 当前滚动index="+index);
@@ -554,6 +628,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			var unit=that.unit;
 			var moveBy=that.moveBy;
 			var moveStyleBy=that.moveStyleBy;
+			var sliderList=that.sliderList;
 			var slider=that.slider;
 			var totalWidth=parseFloat(slider.style[unit]);
 			that.slider.style[transitionDuration] = that.options.animateTime/1000+"s";
@@ -564,6 +639,14 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 				index=length-1;
 			}else if(index<0){
 				index=0;
+			}
+			var oImg=sliderList[index].getElementsByTagName("img")[0];
+			if(oImg){
+				var data_src=oImg.getAttribute("data-src");
+				if(data_src){
+					oImg.src=data_src;
+					oImg.removeAttribute("data-src");
+				}
 			}
 			var left=-index*browserWidth;
 			slider.style[moveBy]=left+"px";
@@ -581,7 +664,31 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			}
 			var index=that.index=Math.abs(Math.round(left/browserWidth));
 			return index;
-		}
+		},getPrevIndex:function(){
+			var that=this;
+			var sliderList=that.sliderList;
+			var length=that.length/2;
+			var index=that.getIndex();
+			index--;
+			if(index>length-1){
+				index=0;
+			}else if(index<0){
+				index=length-1;
+			}
+			return index;
+		},getNextIndex:function(){
+			var that=this;
+			var sliderList=that.sliderList;
+			var length=that.length/2;
+			var index=that.getIndex();
+			index++;
+			if(index>length-1){
+				index=0;
+			}else if(index<0){
+				index=length-1;
+			}
+			return index;
+		}		
 	};
 	module.exports  = Slider;
 });
