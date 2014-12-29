@@ -55,16 +55,18 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 
 				return transitionEnd[vendor];
 			})();
-function IsPC()  
-{  
-   var userAgentInfo = navigator.userAgent;  
-   var Agents = new Array("Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod");  
-   var flag = true;  
-   for (var v = 0; v < Agents.length; v++) {  
-       if (userAgentInfo.indexOf(Agents[v]) > 0) { flag = false; break; }  
-   }  
-   return flag;  
-}    
+
+	function IsPC()  
+	{  
+	   var userAgentInfo = navigator.userAgent;  
+	   var Agents = new Array("Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod");  
+	   var flag = true;  
+	   for (var v = 0; v < Agents.length; v++) {  
+	       if (userAgentInfo.indexOf(Agents[v]) > 0) { flag = false; break; }  
+	   }  
+	   return flag;  
+	}  
+
 	var Slider=function(options){
 		this.options={
 			scroll:true,//是否滚动
@@ -152,13 +154,17 @@ function IsPC()
 			this.loadRun();
 			
 			var that=this;
+			if(that.isPc){
+				that._bind("dragstart",null,function(e){return false;});//绑定鼠标按下或触摸开始事件
+			}
 			that._bind(START_EV,null,function(e){that.handlerEvent(e,that)});//绑定鼠标按下或触摸开始事件
 			that._bind(MOVE_EV,null,function(e){that.handlerEvent(e,that)});//绑定鼠标移动或触摸移动事件
 			that._bind(END_EV,null,function(e){that.handlerEvent(e,that)});//绑定鼠标弹上或触摸停止事件
 			that._bind(CANCEL_EV,null,function(e){
 				clearInterval(that.intervalId);
 				e.preventDefault();
-				that.handlerEvent(e,that);
+				return false;
+				//that.handlerEvent(e,that);
 			});//绑定鼠标弹上或触摸取消事件
 			that._bind(RESIZE_EV,window,function(e){//绑定窗口放大缩小或设备横竖事件
 				clearInterval(that.intervalId);
@@ -352,7 +358,7 @@ function IsPC()
 			var that=this;
 			clearInterval(that.intervalId);
 			if(that.isPc){
-				e.preventDefault();				
+			//	e.preventDefault();				
 			}
 			that.isMoved=false;
 			if(e.changedTouches){
@@ -369,7 +375,8 @@ function IsPC()
 			var sliderList=that.sliderList;
 			var unit=that.unit;
 			var moveBy=that.moveBy;
-			var moveStyleBy=that.moveStyleBy;					
+			var moveStyleBy=that.moveStyleBy;	
+			e.preventDefault();					
 			if(that.isMouseDown){
 				if(e.changedTouches){
 					e=e.changedTouches[e.changedTouches.length-1];
@@ -441,8 +448,6 @@ function IsPC()
 					}					
 				}
 				if (that.options.onSliderMove){that.options.onSliderMove.call(that,e)};
-			}else{
-				e.preventDefault();	
 			}
 		},
 		refresh:function(){
@@ -481,9 +486,8 @@ function IsPC()
 		},
 		_end: function (e) {
 			var that=this;
-			if(that.isMoved){
-				e.preventDefault();
-			
+			e.preventDefault();
+			if(that.isMoved){			
 				var sliderList=that.sliderList;
 				var unit=that.unit;
 				var moveBy=that.moveBy;
