@@ -110,6 +110,9 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			moveBy=that.moveBy="marginTop";
 			moveStyleBy=that.moveStyleBy="margin-top";
 		}
+		if(that.options.scrollTime<that.options.animateTime){
+			that.options.animateTime=that.options.scrollTime;
+		}
 		//that.options.hScrollbar = that.options.hScroll && that.options.hScrollbar;
 		//that.options.vScrollbar = that.options.vScroll && that.options.vScrollbar;
 		//that.options.zoom = that.options.useTransform && that.options.zoom;
@@ -367,7 +370,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			var eX=startPos.x=tempStartPos.x=e.clientX || e.pageX;
 			var eY=startPos.y=tempStartPos.y=e.clientY || e.pageY;			
 			that.isMouseDown=true;
-			if (that.options.onSliderStart){that.options.onSliderStart.call(that,e)};
+			if (that.options.onSliderStart){that.options.onSliderStart.call(that,e)};			
 		},
 		_move:function(e){//
 			var that=this;
@@ -560,11 +563,23 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 				//滚动结束执行
 				if (that.options.onSliderEnd){that.options.onSliderEnd.call(that)};
 			}
-			that.isMouseDown=false;
+			that.isMouseDown=false;			
 		},_bind: function (type,el,fn,bubble) {
-			(el || this.slider).addEventListener(type, fn, !!bubble);
+			if(document.addEventListener){
+				(el || this.slider).addEventListener(type, fn, !!bubble);
+			}else if(document.attachEvent){
+				(el || this.slider).attachEvent("on"+type, fn);
+			}else{
+				(el || this.slider)["on"+type]=fn;
+			}
 		},_unbind: function (type, el, bubble) {
-			(el || this.slider).removeEventListener(type, fn, !!bubble);
+			if(document.addEventListener){
+				(el || this.slider).removeEventListener(type, fn, !!bubble);
+			}else if(document.attachEvent){
+				(el || this.slider).detachEvent("on"+type,fn);
+			}else{
+				(el || this.slider)["on"+type]=null;
+			}
 		},next:function(){
 			var that=this;
 			var unit=that.unit;

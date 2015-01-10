@@ -1,6 +1,6 @@
 define(function(require, exports, module) {
 	var Slider=require("./slider");
-	var options={"id":"slider","scroll":true,"debug":true,"scrollSensitivity":0.1,"direction":"left","scrollTime":5000,"oneByOne":true,
+	var options={"id":"slider","scroll":true,"debug":true,"scrollSensitivity":0.1,"direction":"left","scrollTime":1000,"oneByOne":true,
 	vScroll:false,hScroll:true,scrollType:"ease-in-out",animateTime:1000};
 	var slider=new Slider(options);
 	slider.init();
