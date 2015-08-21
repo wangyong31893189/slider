@@ -84,7 +84,6 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			//useTransition:true,
 			debug:false,//是否开启调试模式   默认为false不开启
 			scrollSensitivity:0.5,//滑动灵敏度  默认0.5   0-1
-			useTransform:true;//是否使用3D加速
 			lazyLoad:true,//默认打开图片懒加载
 			onSliderStart:function(){			
 				console.log("onSliderStart");
@@ -109,9 +108,6 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 		if(that.options.vScroll){//竖向滚动		
 			unit=that.unit="height";
 			moveBy=that.moveBy="marginTop";
-			if(that.options.useTransform){
-				moveBy=that.moveBy=vendor?vendor+"Transform":"transform";
-			}
 			moveStyleBy=that.moveStyleBy="margin-top";
 		}
 		if(that.options.scrollTime<that.options.animateTime){
@@ -383,7 +379,8 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			var sliderList=that.sliderList;
 			var unit=that.unit;
 			var moveBy=that.moveBy;
-			var moveStyleBy=that.moveStyleBy;	
+			var moveStyleBy=that.moveStyleBy;
+			var eTemp=e;
 			if(e.changedTouches){
 				e=e.changedTouches[e.changedTouches.length-1];
 			}
@@ -401,20 +398,22 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			var _direction=0;  //大于等于0向左   小于0为向右				
 			if(that.options.hScroll){
 				if(Math.abs(eY-tempStartPos.y)<5){
-					e.preventDefault();
+					eTemp.preventDefault();
 				}
 				_direction=eX-tempStartPos.x;
 				left=left+(eX-startPos.x);					
 				startPos.x=eX;
 			}else{
 				if(Math.abs(eX-tempStartPos.x)<5){
-					e.preventDefault();
+					eTemp.preventDefault();
 				}
 				_direction=eY-tempStartPos.y;
 				left=left+(eY-startPos.y);
 				startPos.y=eY;					
-			}					
-			if(that.isMouseDown){				
+			}
+			//e.preventDefault();					
+			if(that.isMouseDown){
+				
 				if(_direction>0){//通过鼠标手指触摸位置判断滑动或拖动方向
 					that.scrollDirect="right";					
 				}else{
@@ -469,8 +468,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			var unit=that.unit;
 			var moveBy=that.moveBy;
 			var moveStyleBy=that.moveStyleBy;
-			// var sliderList=that.sliderList=slider.getElementsByTagName("div");
-			var sliderList=that.sliderList=slider.children;
+			var sliderList=that.sliderList=slider.getElementsByTagName("div");
 			var length=that.length=sliderList.length;
 			var browserWidth=0;			
 			if(that.options.hScroll&&!that.options.vScroll){//横向滚动 true 并且竖向滚动为false
@@ -488,17 +486,13 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 				slider.style.display="none";
 				return false;
 			}
-			console.error("body-widht"+browserWidth);
 			slider.parentNode.style[unit]=browserWidth+"px";
 			slider.style[moveBy]=-that.getIndex()*browserWidth+"px";
 			//slider.width=""
 			for(var i=0;i<length;i++){				
 				sliderList[i].style[unit]=browserWidth+"px";				
 			}			
-			slider.style[unit]=browserWidth*length+"px";
-			if(length/2<2){
-				return false;
-			}	
+			slider.style[unit]=browserWidth*length+"px";			
 			return true;
 		},
 		_end: function (e) {
