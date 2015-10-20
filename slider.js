@@ -378,7 +378,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			var slider=that.slider;
 			var sliderList=that.sliderList;
 			var unit=that.unit;
-			var moveBy=that.moveBy;
+			var moveBy=that.moveBy;	
 			var moveStyleBy=that.moveStyleBy;
 			var eTemp=e;
 			if(e.changedTouches){
@@ -468,6 +468,7 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			var unit=that.unit;
 			var moveBy=that.moveBy;
 			var moveStyleBy=that.moveStyleBy;
+			//var sliderList=that.sliderList=slider.children;
 			var sliderList=that.sliderList=slider.getElementsByTagName("div");
 			var length=that.length=sliderList.length;
 			var browserWidth=0;			
@@ -486,12 +487,17 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 				slider.style.display="none";
 				return false;
 			}
+			//console.error("body-widht"+browserWidth);
 			slider.parentNode.style[unit]=browserWidth+"px";
 			slider.style[moveBy]=-that.getIndex()*browserWidth+"px";
 			//slider.width=""
 			for(var i=0;i<length;i++){				
 				sliderList[i].style[unit]=browserWidth+"px";				
 			}			
+			//slider.style[unit]=browserWidth*length+"px";
+			//if(length/2<2){
+			//	return false;
+			//}	
 			slider.style[unit]=browserWidth*length+"px";			
 			return true;
 		},
@@ -606,12 +612,15 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			var index=that.getIndex();
 			var length=that.length/2;
 			var totalWidth=parseFloat(slider.style[unit]);
+			//var browserWidth=that.browserWidth;
 			//清除定时器
 			clearTimeout(that.timeoutId);
 			clearInterval(that.intervalId);
+			//var left=-index*browserWidth;
 			var left=-tempIndex*browserWidth;
 			if(left-1<=-totalWidth/2){
 				slider.style[transitionDuration] = '0';
+				//left=0;			
 				left=0;	
 				slider.style[moveBy]=left+"px";				
 			}
