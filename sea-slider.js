@@ -1,5 +1,4 @@
-//define(function(require, exports, module) {
-(function(){
+define(function(require, exports, module) {
 function prefixStyle (style) {
 	if ( vendor === '' ) return style;
 
@@ -740,7 +739,5 @@ var m = Math,dummyStyle = doc.createElement('div').style,
 			return index;
 		}		
 	};
-	window.Slider=Slider;
-	})();
-//	module.exports  = Slider;
-//});
+	module.exports  = Slider;
+});
